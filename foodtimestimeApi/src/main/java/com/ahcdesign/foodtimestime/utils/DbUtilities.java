@@ -1,7 +1,6 @@
 package com.ahcdesign.foodtimestime.utils;
 
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
@@ -10,25 +9,36 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DbUtilities {
+    public static boolean configRead = false;
 
-    static String CONNECTION_STRING_FORMAT = "jdbc:mysql://%s:%d/%s?user=%s&password=%s&useSSL=false";
+    private static String host;
+    private static Long port;
+    private static String dbName;
+    private static String user;
+    private static String password;
+    private static String connectUrl;
+
+    private static final String CONNECTION_STRING_FORMAT = "jdbc:mysql://%s:%d/%s?user=%s&password=%s&useSSL=false";
 
     /**
      * Connects to the database specified in configure.json
      */
     public static Connection connect() {
         try {
-            JSONParser jsonParser = new JSONParser();
-            JSONObject rootJson = (JSONObject) jsonParser.parse(ConfigUtilities.getConfig());
-            JSONObject configJson = (JSONObject) rootJson.get(ConfigUtilities.CONFIG_KEY);
-            JSONObject dbConfigJson = (JSONObject) configJson.get(ConfigUtilities.DB_CONFIG_KEY);
+            if (!configRead) {
+                JSONObject configJson = ConfigUtilities.getConfigRoot();
+                JSONObject dbConfigJson = (JSONObject) configJson.get(ConfigUtilities.DB_CONFIG_KEY);
 
-            String host = (String) dbConfigJson.get(ConfigUtilities.HOSTNAME_KEY);
-            Long port = (Long) dbConfigJson.get(ConfigUtilities.PORT_KEY);
-            String dbName = (String) dbConfigJson.get(ConfigUtilities.DB_NAME_KEY);
-            String username = (String) dbConfigJson.get(ConfigUtilities.USERNAME_KEY);
-            String password = (String) dbConfigJson.get(ConfigUtilities.PASSOWRD_KEY);
-            String connectUrl = buildJdbcConnectionString(host, port, dbName, username, password);
+                host = (String) dbConfigJson.get(ConfigUtilities.HOSTNAME_KEY);
+                port = (Long) dbConfigJson.get(ConfigUtilities.PORT_KEY);
+                dbName = (String) dbConfigJson.get(ConfigUtilities.DB_NAME_KEY);
+                user = (String) dbConfigJson.get(ConfigUtilities.USERNAME_KEY);
+                password = (String) dbConfigJson.get(ConfigUtilities.PASSOWRD_KEY);
+                connectUrl = buildJdbcConnectionString(host, port, dbName, user, password);
+                // This lets me know I've cached the config settings I need, so I don't need
+                // to read the file every time something calls connect()
+                configRead = true;
+            }
 
             Connection connection = DriverManager.getConnection(connectUrl);
             connection.setSchema("foodtimestime");

@@ -9,7 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class SparkTest {
+public class BackendLauncher {
     public static void main(String[] args) {
         port(5678);
 
