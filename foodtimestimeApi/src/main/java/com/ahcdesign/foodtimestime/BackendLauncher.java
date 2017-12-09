@@ -1,16 +1,26 @@
 package com.ahcdesign.foodtimestime;
 
+import com.ahcdesign.foodtimestime.utils.ConfigUtilities;
 import com.ahcdesign.foodtimestime.utils.DbUtilities;
+import org.json.simple.JSONObject;
 
-import static spark.Spark.*;
+import static spark.Spark.after;
+import static spark.Spark.port;
+import static spark.Spark.post;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class BackendLauncher {
+    public static Logger rootLogger;
+
     public static void main(String[] args) {
+        initializeLogger();
+
         port(5678);
 
         post("/api/v1/random", (request, response) -> {
@@ -44,5 +54,19 @@ public class BackendLauncher {
         }
 
         return mealName;
+    }
+
+    private static void initializeLogger() {
+        try {
+            JSONObject configRoot = ConfigUtilities.getConfigRoot();
+            JSONObject logConfig = (JSONObject) configRoot.get("logs");
+            String logPropsPath = (String) logConfig.get("propsFile");
+            System.setProperty("log4j.configurationFile", logPropsPath);
+        } catch (Exception ignored) {
+            // no-op
+        }
+
+        rootLogger = LogManager.getRootLogger();
+        rootLogger.info("Logging successfully initialized!");
     }
 }
